@@ -3,6 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <title>Document PDF Generator</title>
+    <!-- Load the stable PDF-Lib library -->
+    <script src="https://cloudflare.com"></script>
     <style>
         body { font-family: Arial, sans-serif; margin: 0; padding: 40px; background-color: #f4f7f6; display: flex; justify-content: center; }
         .form-container { background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); width: 100%; max-width: 400px; }
@@ -17,7 +19,7 @@
 <body>
 
 <div class="form-container">
-    <h2>PDF Text Filler</h2>
+    <h2>PDF Template Filler</h2>
     
     <div class="input-group">
         <label for="userName">Full Name</label>
@@ -29,11 +31,11 @@
         <input type="text" id="currentDate" placeholder="YYYY-MM-DD">
     </div>
 
-    <button onclick="generatePDF()">Generate & Download</button>
+    <button onclick="generatePDF()">Fill PDF Template</button>
 </div>
 
 <script>
-    function generatePDF() {
+    async function generatePDF() {
         const nameValue = document.getElementById('userName').value;
         const dateValue = document.getElementById('currentDate').value;
 
@@ -42,36 +44,38 @@
             return;
         }
 
-        // Open a clean blank pop-up window
-        const printWindow = window.open('', '_blank');
-        
-        // Build a clean, styled sheet layout using your text inputs
-        printWindow.document.write(`
-            <html>
-            <head>
-                <title>Completed Form</title>
-                <style>
-                    body { font-family: Arial, sans-serif; padding: 50px; line-height: 2; }
-                    h1 { border-bottom: 2px solid #333; padding-bottom: 10px; margin-bottom: 30px; }
-                    .info { font-size: 20px; margin-bottom: 15px; }
-                    strong { color: #555; display: inline-block; width: 150px; }
-                </style>
-            </head>
-            <body>
-                <h1>Submitted Document Profile</h1>
-                <div class="info"><strong>Full Name:</strong> \${nameValue}</div>
-                <div class="info"><strong>Date:</strong> \${dateValue}</div>
-                <script>
-                    // Trigger the system print dialog instantly
-                    window.onload = function() {
-                        window.print();
-                        window.close();
-                    }
-                <\/script>
-            </body>
-            </html>
-        `);
-        printWindow.document.close();
+        try {
+            // 1. Fetch your original uploaded PDF template file
+            const response = await fetch('./template.pdf');
+            if (!response.ok) {
+                throw new Error('Could not find template.pdf in your repository folder.');
+            }
+            const existingPdfBytes = await response.arrayBuffer();
+
+            // 2. Load it into the PDF processing module
+            const pdfDoc = await PDFLib.PDFDocument.load(existingPdfBytes);
+            const pages = pdfDoc.getPages();
+            const firstPage = pages[0]; // Selects page 1
+
+            // 3. Stamp your input values directly onto your template coordinate grid
+            // Note: x increases to the right, y increases upward from the bottom edge
+            firstPage.drawText(nameValue, { x: 150, y: 550, size: 14 });
+            firstPage.drawText(dateValue, { x: 150, y: 500, size: 14 });
+
+            // 4. Export and package the edited document
+            const pdfBytes = await pdfDoc.save();
+
+            // 5. Trigger an immediate browser file download
+            const blob = new Blob([pdfBytes], { type: "application/pdf" });
+            const link = document.createElement('a');
+            link.href = window.URL.createObjectURL(blob);
+            link.download = "Filled_Template_Form.pdf";
+            link.click();
+
+        } catch (error) {
+            console.error(error);
+            alert('Error mapping template: ' + error.message);
+        }
     }
 </script>
 
