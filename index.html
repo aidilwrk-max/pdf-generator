@@ -3,8 +3,6 @@
 <head>
     <meta charset="UTF-8">
     <title>Document PDF Generator</title>
-    <!-- Load the stable jsPDF library -->
-    <script src="https://cloudflare.com"></script>
     <style>
         body { font-family: Arial, sans-serif; margin: 0; padding: 40px; background-color: #f4f7f6; display: flex; justify-content: center; }
         .form-container { background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); width: 100%; max-width: 400px; }
@@ -35,7 +33,7 @@
 </div>
 
 <script>
-    async function generatePDF() {
+    function generatePDF() {
         const nameValue = document.getElementById('userName').value;
         const dateValue = document.getElementById('currentDate').value;
 
@@ -44,27 +42,36 @@
             return;
         }
 
-        try {
-            // Initialize jsPDF safely
-            const jsPDF = window.jspdf ? window.jspdf.jsPDF : window.jsPDF;
-            const doc = new jsPDF();
-
-            // Set font properties
-            doc.setFont("Helvetica", "normal");
-            doc.setFontSize(14);
-
-            // Print the input data onto the PDF sheet
-            // Coordinates: X (distance from left margin), Y (distance from top margin)
-            doc.text("Full Name: " + nameValue, 20, 40);
-            doc.text("Date: " + dateValue, 20, 50);
-
-            // Save and download the finalized file directly
-            doc.save("Completed_Form.pdf");
-
-        } catch (error) {
-            console.error(error);
-            alert('System Error: ' + error.message);
-        }
+        // Open a clean blank pop-up window
+        const printWindow = window.open('', '_blank');
+        
+        // Build a clean, styled sheet layout using your text inputs
+        printWindow.document.write(`
+            <html>
+            <head>
+                <title>Completed Form</title>
+                <style>
+                    body { font-family: Arial, sans-serif; padding: 50px; line-height: 2; }
+                    h1 { border-bottom: 2px solid #333; padding-bottom: 10px; margin-bottom: 30px; }
+                    .info { font-size: 20px; margin-bottom: 15px; }
+                    strong { color: #555; display: inline-block; width: 150px; }
+                </style>
+            </head>
+            <body>
+                <h1>Submitted Document Profile</h1>
+                <div class="info"><strong>Full Name:</strong> \${nameValue}</div>
+                <div class="info"><strong>Date:</strong> \${dateValue}</div>
+                <script>
+                    // Trigger the system print dialog instantly
+                    window.onload = function() {
+                        window.print();
+                        window.close();
+                    }
+                <\/script>
+            </body>
+            </html>
+        `);
+        printWindow.document.close();
     }
 </script>
 
