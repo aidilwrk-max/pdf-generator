@@ -46,7 +46,7 @@
 
         try {
             // Initialize jsPDF safely
-            const { jsPDF } = window.jspdf;
+            const jsPDF = window.jspdf ? window.jspdf.jsPDF : window.jsPDF;
             const doc = new jsPDF();
 
             // Set font properties
