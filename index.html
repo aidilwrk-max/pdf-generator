@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <title>Document PDF Generator</title>
-    <!-- Load the pdf-lib library from a stable CDN -->
+    <!-- Load the stable jsPDF library -->
     <script src="https://cloudflare.com"></script>
     <style>
         body { font-family: Arial, sans-serif; margin: 0; padding: 40px; background-color: #f4f7f6; display: flex; justify-content: center; }
@@ -12,7 +12,7 @@
         .input-group { margin-bottom: 20px; }
         label { display: block; margin-bottom: 8px; font-weight: bold; color: #555; }
         input { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; font-size: 14px; }
-        button { width: 100%; padding: 12px; background-color: #007bff; color: white; border: none; border-radius: 4px; font-size: 16px; font-weight: bold; cursor: pointer; transition: background 0.2s; }
+        button { width: 100%; padding: 12px; background-color: #007bff; color: white; border: none; border-radius: 4px; font-size: 16px; font-weight: bold; cursor: pointer; }
         button:hover { background-color: #0056b3; }
     </style>
 </head>
@@ -45,32 +45,21 @@
         }
 
         try {
-            // Fetch the template file relative to this script
-            const response = await fetch('./template.pdf');
-            if (!response.ok) {
-                throw new Error('Could not find template.pdf in the repository folder.');
-            }
-            const existingPdfBytes = await response.arrayBuffer();
+            // Initialize jsPDF safely
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
 
-            // Load the document via pdf-lib
-            const pdfDoc = await PDFLIB.PDFDocument.load(existingPdfBytes);
-            const pages = pdfDoc.getPages();
-            const firstPage = pages[0];
+            // Set font properties
+            doc.setFont("Helvetica", "normal");
+            doc.setFontSize(14);
 
-            // Stamp your text entries onto the sheet coordinates
-            // (Adjust x and y later to align perfectly with your design layouts)
-            firstPage.drawText(nameValue, { x: 100, y: 600, size: 14 });
-            firstPage.drawText(dateValue, { x: 100, y: 550, size: 14 });
+            // Print the input data onto the PDF sheet
+            // Coordinates: X (distance from left margin), Y (distance from top margin)
+            doc.text("Full Name: " + nameValue, 20, 40);
+            doc.text("Date: " + dateValue, 20, 50);
 
-            // Package the finished document string bytes
-            const pdfBytes = await pdfDoc.save();
-
-            // Direct download execution link wrapper
-            const blob = new Blob([pdfBytes], { type: "application/pdf" });
-            const link = document.createElement('a');
-            link.href = window.URL.createObjectURL(blob);
-            link.download = "Completed_Form.pdf";
-            link.click();
+            // Save and download the finalized file directly
+            doc.save("Completed_Form.pdf");
 
         } catch (error) {
             console.error(error);
