@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Document PDF Generator</title>
+    <!-- Load the pdf-lib library from a stable CDN -->
+    <script src="https://unpkg.com"></script>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 0; padding: 40px; background-color: #f4f7f6; display: flex; justify-content: center; }
+        .form-container { background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); width: 100%; max-width: 400px; }
+        h2 { margin-top: 0; color: #333; font-size: 22px; text-align: center; }
+        .input-group { margin-bottom: 20px; }
+        label { display: block; margin-bottom: 8px; font-weight: bold; color: #555; }
+        input { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; font-size: 14px; }
+        button { width: 100%; padding: 12px; background-color: #007bff; color: white; border: none; border-radius: 4px; font-size: 16px; font-weight: bold; cursor: pointer; transition: background 0.2s; }
+        button:hover { background-color: #0056b3; }
+    </style>
+</head>
+<body>
+
+<div class="form-container">
+    <h2>PDF Text Filler</h2>
+    
+    <div class="input-group">
+        <label for="userName">Full Name</label>
+        <input type="text" id="userName" placeholder="Enter full name">
+    </div>
+    
+    <div class="input-group">
+        <label for="currentDate">Date</label>
+        <input type="text" id="currentDate" placeholder="YYYY-MM-DD">
+    </div>
+
+    <button onclick="generatePDF()">Generate & Download</button>
+</div>
+
+<script>
+    async function generatePDF() {
+        const nameValue = document.getElementById('userName').value;
+        const dateValue = document.getElementById('currentDate').value;
+
+        if (!nameValue || !dateValue) {
+            alert('Please fill out both fields.');
+            return;
+        }
+
+        try {
+            // Fetch the template file relative to this script
+            const response = await fetch('./template.pdf');
+            if (!response.ok) {
+                throw new Error('Could not find template.pdf in the repository folder.');
+            }
+            const existingPdfBytes = await response.arrayBuffer();
+
+            // Load the document via pdf-lib
+            const pdfDoc = await PDFLib.PDFDocument.load(existingPdfBytes);
+            const pages = pdfDoc.getPages();
+            const firstPage = pages[0];
+
+            // Stamp your text entries onto the sheet coordinates
+            // (Adjust x and y later to align perfectly with your design layouts)
+            firstPage.drawText(nameValue, { x: 100, y: 600, size: 14 });
+            firstPage.drawText(dateValue, { x: 100, y: 550, size: 14 });
+
+            // Package the finished document string bytes
+            const pdfBytes = await pdfDoc.save();
+
+            // Direct download execution link wrapper
+            const blob = new Blob([pdfBytes], { type: "application/pdf" });
+            const link = document.createElement('a');
+            link.href = window.URL.createObjectURL(blob);
+            link.download = "Completed_Form.pdf";
+            link.click();
+
+        } catch (error) {
+            console.error(error);
+            alert('System Error: ' + error.message);
+        }
+    }
+</script>
+
+</body>
+</html>
