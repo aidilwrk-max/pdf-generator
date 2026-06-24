@@ -53,7 +53,7 @@
             const existingPdfBytes = await response.arrayBuffer();
 
             // Load the document via pdf-lib
-            const pdfDoc = await PDFLib.PDFDocument.load(existingPdfBytes);
+            const pdfDoc = await PDFLIB.PDFDocument.load(existingPdfBytes);
             const pages = pdfDoc.getPages();
             const firstPage = pages[0];
 
